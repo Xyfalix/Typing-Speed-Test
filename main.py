@@ -344,30 +344,4 @@ credit_label = Label(window, text='Created by: Nicholas Lim', font=(FONT_NAME, 1
 credit_label.grid(column=0, row=6, columnspan=3, pady=20)
 
 window.mainloop()
-# Functionality Checklist
-# TODO 1: Timer for 60s countdown.
-#  1) Once the timer hits 0s, end the test and show results, and add an option to restart.
-#  2) Timer starts counting down once user types the first character.
-#  3) Also add a restart button on the main UI in the event user wants a do-over.
-
-# TODO 2: Restart button for resetting the typing speed test.
-#  Reset will do the following.
-#  1) Reset the timer to 60s.
-#  2) Generate a new list of words to type.
-#  3) enable both textbox widget and text entry widget.
-#  4) Reset the corrected CPM and WPM.
-
-# TODO 3: Characters per minute (CPM) and corrected CPM display. WPM display
-#  1) Corrected CPM calculated by number of correct characters typed divided by elapsed time, updated after every word.
-#  Set initial values to "-"
-
-# TODO 4: Highscore display for WPM.
-
-# TODO 5: Get a random list of words and pull out some of these words to display on the UI, separated by spaces.
-#  1) Highlight the word to be typed.
-#  2) Correct words are highlighted in green after completion, characters typed correctly are in blue.
-#  Wrong words or characters are in red.
-#  3) Generate a new line of words after the second to last line has been completed,
-#  and move the entire display upwards, hiding the first line and revealing the line underneath.
-#  4)
 
