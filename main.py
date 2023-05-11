@@ -34,13 +34,14 @@ high_score_display = Label(window, text=f'High Score: {high_score} WPM', font=(F
 high_score_display.grid(column=1, row=0, pady=20)
 
 # ---------------------------- Time Display Widget ------------------------------- #
-time_left_display = Label(window, text='Time Left: 60s', font=(FONT_NAME, 20), fg='white', bg='#3E3B36')
+time_left_display = Label(window, text=f'Time Left: ', font=(FONT_NAME, 20), fg='white', bg='#3E3B36')
 time_left_display.grid(column=1, row=1, pady=20)
 
 def countdown(count):
     global countdown_id
     global wpm
     global cpm
+    global high_score
     # change text in label
     time_left_display['text'] = f'Time Left: {count}s'
 
@@ -51,8 +52,15 @@ def countdown(count):
     else:
         # disable further user input into the text entry widget once time is up.
         typing_entry.config(state='disabled')
+        typing_entry.unbind_all('<KeyPress>')
+        typing_entry.unbind_all('<space>')
+
         # disable further interaction with the textbox widget.
         word_list.config(state='disabled')
+
+        # Remove focus from all widgets to prevent further user interaction
+        window.focus_set()
+
         # Update high score when time is up if wpm is higher than the current high score.
         if wpm > high_score:
             cpm = correct_characters
@@ -60,12 +68,7 @@ def countdown(count):
             wpm = words_typed
             wpm_display['text'] = f'WPM: {round(wpm)}'
             high_score_display['text'] = f'High Score: {round(wpm)} WPM'
-
-def start_countdown(event):
-    countdown(60)
-
-    # unbind the countdown function from the typing_entry widget after the first keypress
-    typing_entry.unbind('<Key>', start_countdown)
+            high_score = wpm
 
 
 # ---------------------------- CPM, WPM displays ------------------------------- #
@@ -78,7 +81,7 @@ wpm_display.grid(column=1, row=2, pady=20)
 # ---------------------------- Restart Button ------------------------------- #
 def restart():
     global chosen_color, correct_characters, words_typed, cpm, wpm, start_time, first_call, elapsed_time, countdown_id,\
-        word_list_index, words
+        word_list_index, words, high_score
 
     # Stop the countdown
     if countdown_id:
@@ -97,8 +100,7 @@ def restart():
     word_list_index = 0
 
     # Reset UI elements here
-    high_score_display['text'] = f'High Score: {high_score} WPM'
-    time_left_display['text'] = 'Time Left: 60s'
+    time_left_display['text'] = 'Time Left: '
     cpm_display['text'] = f'Corrected CPM: {cpm}'
     wpm_display['text'] = f'WPM: {wpm}'
     typing_entry.config(state='normal')
@@ -110,14 +112,12 @@ def restart():
     with open('1000_words.txt', 'r') as file:
         words = file.read().splitlines()
         random.shuffle(words)
-        print(words)
 
     for word in words:
         word_list.insert(END, f'{word} ')
 
     typing_entry.bind('<KeyPress>', on_entry_key)
     typing_entry.bind('<space>', on_entry_key)
-    print(f'word list index is {word_list_index}')
 
 
 restart_button = Button(window, text="Restart", font=(FONT_NAME, 14), bg="#36393e", fg="white", width=7, command=restart)
@@ -150,18 +150,18 @@ word_list.tag_config("red", foreground="red")
 # Count the number of correct characters typed by the user.
 word_list.tag_configure("correct")
 
+# Disable the textbox to prevent the user from interacting with it.
+word_list.config(state='disabled')
+
 def highlight_char(event):
-    print(f'Highlight_char function is running!')
     global word_list_index
     global first_call
     global start_time
     global correct_characters
     # highlight correct character in blue
     typed_entry = list(typing_entry.get().strip())
-    print(f'typed entry is {typed_entry}')
 
     current_word = words[word_list_index - 1]
-    print(f'current_word is {current_word}')
 
     # get starting index of current word
     start_index_str = word_list.search(f"\\m{current_word}\\M", "1.0", stopindex="end", regexp=True)
@@ -193,8 +193,6 @@ def highlight_char(event):
     correct_characters = sum(len(word_list.get(start, end)) for start, end in zip(correct_ranges[0::2],
                                                                                   correct_ranges[1::2]))
 
-    print(f"Number of correct characters: {correct_characters}")
-
     # start the timing when the user starts an input
     if first_call:
         start_time = time.time()
@@ -202,7 +200,6 @@ def highlight_char(event):
 
 def highlight_word(event):
     global word_list_index
-    print(f'highlight_word function is running!')
 
     # highlight entire word in green background
     start_index_str = word_list.search(f"\\m{words[word_list_index]}\\M", "1.0", stopindex="end", regexp=True)
@@ -221,9 +218,6 @@ def highlight_word(event):
     end_index_rol_col = [str(s) for s in end_index_rol_col_int]
     end_index_str = ".".join(str(s) for s in end_index_rol_col)
 
-    print(f'highlight_word start index is {start_index_str}')
-    print(f'highlight_word end index is {end_index_str}')
-
     word_list.tag_add("highlight", start_index_str, end_index_str)
 
     word_list_index += 1
@@ -239,8 +233,6 @@ def remove_highlight(event):
     global wpm
     global elapsed_time
 
-    print(f'Remove highlight function is running!')
-
     start_index_str = word_list.search(f"\\m{words[word_list_index-1]}\\M", "1.0", stopindex="end", regexp=True)
     start_index_rol_col = (start_index_str.split("."))
 
@@ -252,28 +244,21 @@ def remove_highlight(event):
     for i in range(len(end_index_rol_col_int)):
         if i == 1:
             end_index_rol_col_int[i] += len(words[word_list_index-1])
-    print(f'end index row col is {end_index_rol_col_int}')
 
     # convert end_index_rol_col_int back to str and join the row column indices with a "." between the 2
     end_index_rol_col = [str(s) for s in end_index_rol_col_int]
     end_index_str = ".".join(str(s) for s in end_index_rol_col)
-
-    print(f'remove_highlight start index is {start_index_str}')
-    print(f'remove_highlight end index is {end_index_str}')
     word_list.tag_remove("highlight", start_index_str, end_index_str)
 
     # increment words_typed if word typed correctly. Highlight wrong words entirely in red.
     if typing_entry.get().strip() == words[word_list_index-1]:
-        print('Entry typed correctly!')
         words_typed += 1
     else:
-        print('Entry typed wrongly!')
         word_list.tag_remove("blue", start_index_str, end_index_str)
         word_list.tag_add("red", start_index_str, end_index_str)
 
     # scroll down by 1 line if previous and current word has a row difference of at least 1
     index_coordinates = word_list.bbox(start_index_str)
-    print(f'index coordinates are {index_coordinates}')
     if index_coordinates[1] > 100:
         word_list.yview_scroll(1, "units")  # Scroll down by 1 line
 
@@ -292,7 +277,6 @@ def highlight_and_remove(event):
 
 # ---------------------------- Typing Entry ------------------------------- #
 def on_entry_key(event):
-    print(typing_entry.get())
     typing_entry.delete(0, END)
 
     # Start countdown after the first keypress
